@@ -3,12 +3,19 @@ import numpy as np
 import sys
 import h5py
 
+DAY_IN_MS = 86399999999
 
-def data2mat(data):
+def data2mat(data, ids):
+    iters = data.loc[:, data.timestamp_usec] // DAY_IN_MS
+    
+    
     return None
 
 def read_set(source, dataset, ids):
-    for chunk in pd.read_csv(source, chunksize=chunksize):
+    chuncksize = 1e6
+    chuncks = pd.read_csv(source, nrows=2e6, chunksize=chuncksize)
+    # for chunk in pd.read_csv(source, chunksize=chunksize):
+    for chunk in chuncks
         unique_drives = pd.unique(chunk.loc[:, 'drive_id'])
         if cur_drive and cur_drive in unique_drives:
             # special case to merge with data from previous chunk
@@ -22,9 +29,9 @@ def read_set(source, dataset, ids):
             unique_drives = unique_drives[unique_drives != drive]
         for drive in unique_drives:
             # slice data
-            data = chunk.loc[chunk.drive_id == drive, ids]
+            data = chunk.loc[chunk.drive_id == drive, :]
             # convert to mat
-            mat = data2mat(data)
+            mat = data2mat(data, ids)
             # push to dataset
             
 
