@@ -1,0 +1,4 @@
+1. swap file: includes day when disk was removed from system. Later disk may appear in dataset as already 'replaced'. Keep it in mind when creating tensor.
+2. from all disk that have been at least one time "status_dead", 60% of them are presented in 'swap' or 'bad' sets. While never died only 20%.
+3. bad chip: still not sure what is going on in it. Measurement done while drive is dead and in most cases after drive is back in work. Much closer correlated to the first day when disk is indicated as dead. Not nessasory will cause missing days.
+4. In general, all single missed days have no correlation to swap or bad chip sets.
