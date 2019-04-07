@@ -1,0 +1,87 @@
+{
+    "name": "Testing template",
+    "seed": 1,
+    "arch": {
+        "type": "LSTM_one_to_one",
+        "args": {
+            "n_feat": 25,
+            "max_seq": 2054,
+            "n_lstm": 1,
+            "lstm_sizes": "[5]",
+            "fc_sizes": "[80]",
+            "lstm_dropout": 0.2,
+            "dropout": 0.1,
+            "activation": "sigmoid"
+        }
+    },
+    "dataloader": {
+        "type": "GoogleDataset",
+        "args": {
+            "hdf5_source": "data/Google_SSD_data.hdf5",
+            "dir": "google/ssd/full/merged/seq2bin/shifted/test",
+            "valid_ratio": 0.15,
+            "test_ratio": 0.15,
+            "seed": 1
+        }
+    },
+    "loss": "binary_crossentropy",
+    "metrics": [
+        "accuracy",
+        {
+            "type": "detection_atper",
+            "args": {
+                "target_far": 0.01,
+                "eps": 1e-05,
+                "max_iter": 10
+            }
+        }
+    ],
+    "class_weight": 10,
+    "optimizer": {
+        "type": "Adam",
+        "args": {
+            "learning_rate": 1e-03,
+            "decay": 1e-07,
+            "amsgrad": true
+        }
+    },
+    "callbacks": [
+        {
+            "name": "early stop callback",
+            "early stop callback": {
+                "type": "EarlyStopping",
+                "args": {
+                    "monitor": "val_detection_atper",
+                    "patience": 50,
+                    "min": true
+                }
+            }
+        },
+        {
+            "name": "TensorBoard logger",
+            "TensorBoard logger": {
+                "type": "TensorBoard",
+                "args": {
+                    "log_dir": "log/test/",
+                    "write_graph": true
+                }
+            }
+        },
+        {
+            "name": "Detection rate curve logger",
+            "Detection rate curve logger": {
+                "type": "DRCurve",
+                "args": {
+                    "min_FN": 0.01,
+                    "max_FN": 0.05,
+                    "n_steps": 50
+                }
+            }
+        }
+    ],
+    "trainer": {
+        "epochs": 1500,
+        "verbosity": 1,
+        "batch_size": 512
+    }
+}
