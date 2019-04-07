@@ -22,7 +22,7 @@ class LSTM_one_to_one(BaseModel):
         n_hidden = lstm_sizes[0]
 
         lstms = [layers.LSTM(
-            n_hidden, return_sequences=False, dropout=lstm_dropout, name="lstm1_feature_%i" % i) for _ in range(n_feat)]
+            n_hidden, return_sequences=False, dropout=lstm_dropout, name="lstm1_feature_%d" % _) for _ in range(n_feat)]
 
         ys = []
         for i, lstm in enumerate(lstms):

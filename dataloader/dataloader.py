@@ -1,6 +1,6 @@
 import numpy as np
 import h5py
-from base import BaseDataset
+from .base import BaseDataset
 
 
 class GoogleDataset(BaseDataset):
@@ -9,7 +9,7 @@ class GoogleDataset(BaseDataset):
         if seed is not None:
             np.random.seed(seed)
 
-        hdf5 = h5py.File(hdf5_source)
+        hdf5 = h5py.File(hdf5_source, "r")
         fd = hdf5[dir]
 
         X = fd["X"]

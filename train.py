@@ -12,7 +12,7 @@ import dataloader as module_data
 
 
 def get_instance(module, name, config, *args):
-    return getattr(module, config[name]['type'](*args, **config[name]['args']))
+    return getattr(module, config[name]['type'])(*args, **config[name]['args'])
 
 
 def train(config):
@@ -59,8 +59,6 @@ if __name__ == "__main__":
     parser.add_argument('-c', '--config', default="None",
                         type=str, help="config file path")
 
-    args = parser.parse_args()
-
-    config = json.load(open(args.config))
-
+    args = parser.parse_args
+    config = json.load(open("config/config_test.json"))
     train(config)

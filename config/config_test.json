@@ -17,8 +17,8 @@
     "dataloader": {
         "type": "GoogleDataset",
         "args": {
-            "hdf5_source": "data/Google_SSD_data.hdf5",
-            "dir": "google/ssd/full/merged/seq2bin/shifted/test",
+            "hdf5_source": "data/test.hdf5",
+            "dir": "",
             "valid_ratio": 0.15,
             "test_ratio": 0.15,
             "seed": 1
@@ -66,21 +66,10 @@
                     "write_graph": true
                 }
             }
-        },
-        {
-            "name": "Detection rate curve logger",
-            "Detection rate curve logger": {
-                "type": "DRCurve",
-                "args": {
-                    "min_FN": 0.01,
-                    "max_FN": 0.05,
-                    "n_steps": 50
-                }
-            }
         }
     ],
     "trainer": {
-        "epochs": 1500,
+        "epochs": 1000,
         "verbosity": 1,
         "batch_size": 512
     }
