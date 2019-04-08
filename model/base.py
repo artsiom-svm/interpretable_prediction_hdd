@@ -18,10 +18,10 @@ class BaseModel:
     def set_loss(self, loss):
         self.loss = loss
 
-    def set_class_weigth(self, weight):
+    def set_class_weight(self, weight):
         self.class_weight = weight
 
-    def add_meric(self, metric):
+    def add_metric(self, metric):
         self.metrics.append(metric)
 
     def add_callback(self, callback):
@@ -34,12 +34,11 @@ class BaseModel:
         self.model.compile(optimizer=self.optimizer,
                            loss=self.loss, metrics=self.metrics)
 
-    def train(self, x_train, y_train, x_val, y_val, **kwards):
-        return self.model.fit(x=x_train,
-                              y=y_train,
+    def train(self, train, valid, test, **kwards):
+        self.model.test_data = test
+        return self.model.fit(*train,
                               callbacks=self.callbacks,
-                              validation_data=(x_val, y_val),
-                              class_weight=self.class_weight
+                              validation_data=valid,
                               ** kwards)
 
     def __call__(self, x):

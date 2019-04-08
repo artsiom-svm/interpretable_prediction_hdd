@@ -108,3 +108,4 @@ Data*
 *.txt
 *.hdf5
 .vscode*
+log/
