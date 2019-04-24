@@ -1,15 +1,15 @@
 {
     "name": "Testing template",
-    "seed": 2,
+    "seed": 3,
     "arch": {
         "type": "LSTM_one_to_one",
         "args": {
             "n_feat": 25,
             "n_lstm": 1,
             "lstm_sizes": "[10]",
-            "fc_sizes": "[256, 80]",
+            "fc_sizes": "[512, 256, 32]",
             "lstm_dropout": 0.0,
-            "dropout": 0.1,
+            "dropout": 0.05,
             "activation": "sigmoid"
         }
     },
@@ -17,9 +17,9 @@
         "type": "GoogleDataset",
         "args": {
             "hdf5_source": "../google_ssd_data/google_ssd_data.hdf5",
-            "dir": "google/ssd/full/merged/seq2bin/shifted/extended",
+            "dir": "google/ssd/full/merged/shifted",
             "valid_ratio": 0.15,
-            "test_ratio": 0.15,
+            "test_ratio": 0.0,
             "seed": 2
         }
     },
@@ -39,7 +39,7 @@
     "optimizer": {
         "type": "Adam",
         "args": {
-            "lr": 1e-03,
+            "lr": 1e-02,
             "decay": 0,
             "amsgrad": true
         }
@@ -50,7 +50,7 @@
             "TensorBoard logger": {
                 "type": "TrainValTensorBoard",
                 "args": {
-                    "log_dir": "log/LSTM2/visualization/",
+                    "log_dir": "log/LSTM25/visualization/",
                     "write_graph": true
                 }
             }
@@ -60,9 +60,22 @@
             "Model saver": {
                 "type": "ModelCheckpoint",
                 "args": {
-                    "filepath": "log/LSTM3/weights.{epoch:03d}-{val_detection_atper:.2f}.hdf5",
+                    "filepath": "log/LSTM25/weights.{epoch:03d}-{val_detection_atper:.2f}.hdf5",
                     "monitor": "val_detection_atper",
                     "save_best_only": false,
+                    "period": 1,
+                    "save_weights_only": true
+                }
+            }
+        },
+        {
+            "name": "Model saver best",
+            "Model saver best": {
+                "type": "ModelCheckpoint",
+                "args": {
+                    "filepath": "log/LSTM25/weights.{epoch:03d}-{val_detection_atper:.2f}.hdf5",
+                    "monitor": "val_detection_atper",
+                    "save_best_only": true,
                     "period": 1,
                     "save_weights_only": true
                 }
@@ -74,11 +87,11 @@
                 "type": "ReduceLROnPlateau",
                 "args": {
                     "monitor": "val_detection_atper",
-                    "factor": 0.1,
-                    "patience": 10,
+                    "factor": 0.3,
+                    "patience": 20,
                     "verbose": 1,
                     "mode": "max",
-                    "min_lr": 1e-08
+                    "min_lr": 1e-07
                 }
             }
         },
@@ -87,7 +100,7 @@
             "early stop callback": {
                 "type": "EarlyStopping",
                 "args": {
-                    "monitor": "val_detection_atper",
+                    "monitor": "val_loss",
                     "patience": 50,
                     "mode": "max"
                 }
@@ -98,10 +111,10 @@
             "Detection rate metric": {
                 "type": "ROC_metric",
                 "args": {
-                    "min_FN": 0.01,
-                    "max_FN": 0.99,
+                    "min_FN": 0.001,
+                    "max_FN": 0.04,
                     "n_step": 100,
-                    "log_dir": "log/LSTM3/visualization/",
+                    "log_dir": "log/LSTM25/visualization/",
                     "target_far": 0.01,
                     "max_iter": 10
                 }
@@ -111,6 +124,6 @@
     "trainer": {
         "epochs": 500,
         "verbose": 1,
-        "batch_size": 512
+        "batch_size": 256
     }
 }
