@@ -13,32 +13,27 @@ class RETAIN(BaseModel):
         self.l1 = l1
         self.Wemb = L.Dense(units=Wemb_size,
                     activation=None,
-                    use_bias=False
+                    use_bias=False,
+                    name='v/Wemb'
                     )
 
         self.Wa = L.Dense(units=1,
                     activation=None,
-                    use_bias=True)
+                    use_bias=True,
+                    name='a/Wa')
 
         self.Wb = L.Dense(units=Wemb_size,
                     activation=tf.nn.tanh,
-                    use_bias=True)
+                    use_bias=True,
+                    name='b/Wb')
 
         self.Wc = L.Dense(units=1,
                     activation=tf.nn.sigmoid,
-                    use_bias=True)
+                    use_bias=True,
+                    name='c/Wc')
 
         self.RNNa = RNNa
         self.RNNb = RNNb
-
-        self.RNN_a = L.LSTM(units=25,
-                       activation='tanh',
-                       recurrent_activation='sigmoid',
-                       recurrent_dropout=0,
-                       unroll=False,
-                       use_bias=True,
-                       return_sequences=True
-                      )
 
         x = keras.Input(shape=(None, n_feat))
         y = self.forward(x)
@@ -89,8 +84,9 @@ class RETAIN(BaseModel):
         return self.RNNb(v_inv)
 
     def a(self, e):
-        e = tf.reduce_sum(e, axis=-1)
-        return L.Softmax(activity_regularizer=keras.regularizers.l1(self.l1))(e)
+        e = tf.reduce_sum(e, axis=-1, name='a/e')
+        return L.Softmax(activity_regularizer=keras.regularizers.l1(self.l1),
+                        name='a/softmax')(e)
 
     def b(self, h):
         return self.Wb(h)
@@ -100,10 +96,11 @@ class RETAIN(BaseModel):
 
     def c(self, a, b, v):
         a = K.expand_dims(a, axis=-1)
-        return tf.reduce_sum(a * (b * v), axis=-2)
+        return tf.reduce_sum(a * (b * v), axis=-2, name='c/c')
 
     def y(self, c):
-        return self.Wc(c)
+        y = self.Wc(c)
+        return tf.identity(y, 'y')
 
     def get_a(self, x):
         v = self.v(x)
@@ -160,13 +157,13 @@ class RETAIN_LSTM(RETAIN):
                 unroll=False,
                 use_bias=True,
                 return_sequences=True,
-                name=f"LSTM-{name}-{i}")
+                name=f"{name}/LSTM-{i}")
             for i in range(n_layers)]
 
         fcs = [L.Dense(units=size,
                 activation=tf.nn.tanh,
                 use_bias=True,
-                name=f"FC-{name}-{i}")
+                name=f"{name}/FC-{i}")
         for i,size in enumerate(fc_sizes)]
 
         def _forward(x):
