@@ -36,9 +36,12 @@ class BaseModel:
 
     def train(self, train, valid, test, **kwards):
         self.model.test_data = test
-        return self.model.fit(*train,
+        self.model.valid_data = valid
+        self.model.train_data = train
+        return self.model.fit(*(train.xy),
                               callbacks=self.callbacks,
-                              validation_data=valid,
+                              validation_data=valid.xy,
+                              class_weight=self.class_weight,
                               ** kwards)
 
     def __call__(self, x):

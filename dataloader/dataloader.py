@@ -2,10 +2,9 @@ import numpy as np
 import h5py
 from .base import BaseDataset
 
-
-class GoogleDataset(BaseDataset):
+class H5DatasetNamed(BaseDataset):
     def __init__(self, hdf5_source, dir=None, valid_ratio=0.0, test_ratio=0.0, seed=None):
-        super(GoogleDataset, self).__init__(valid_ratio, test_ratio)
+        super(H5DatasetNamed, self).__init__(valid_ratio, test_ratio)
         if seed is not None:
             np.random.seed(seed)
 
@@ -17,7 +16,11 @@ class GoogleDataset(BaseDataset):
 
         X = fd["X"]
         Y = fd["Y"]
+        try :
+            names = fd["Names"]
+        except:
+            names = None
 
-        self._split_data(X, Y)
+        self._split_data(X, Y, names)
 
         hdf5.close()

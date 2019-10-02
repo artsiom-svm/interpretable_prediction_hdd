@@ -1,5 +1,6 @@
 import tensorflow as tf
 import matplotlib.pyplot as plt
+import seaborn as sns
 import io
 from pylab import annotate
 from mpl_toolkits.axes_grid1 import make_axes_locatable
@@ -33,13 +34,27 @@ def image(c, x, labels):
     ax_contrib.set_aspect(4)
     # add labels
     for j,label in enumerate(labels):
-        annotate(label, xy=(0, j), xytext=(-9, j), fontsize=10)
+        annotate(label, xy=(0, j), xytext=(-12, j), fontsize=10)
 
     plt.colorbar(im,fraction=0.026, pad=0.04)
     return figure
 
-def save_images(coeff, contrib, writer, names, labels):
+def plot(x, y, xlabel, ylabel):
+    sns.set()
+    figure = plt.figure(figsize=(10, 10))
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    plt.ylim(0, 1)
+    plt.plot(x, y)
+    return figure
+
+def save_plot(x, y, writer, title='plot', xlabel='x', ylabel='y', step=0):
+    img = plot(x, y, xlabel, ylabel)
+    with writer.as_default():
+        tf.summary.image(title, plot_to_image(img), step=step)
+
+def save_images(coeff, contrib, writer, names, labels, step=0):
     with writer.as_default():
         for i,(c,x, n) in enumerate(zip(coeff, contrib, names)):
             img = image(c,x, labels)
-            tf.summary.image(n, plot_to_image(img), step=0)
+            tf.summary.image(n, plot_to_image(img), step=step)

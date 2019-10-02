@@ -1,3 +1,4 @@
+import datetime
 import dataloader as module_data
 import model.callback as module_callback
 import model.metric as module_metric
@@ -8,25 +9,25 @@ import json
 import numpy as np
 import tensorflow.keras as keras
 import tensorflow as tf
-import logging
+import os
+import utils
+from shutil import copy2
 from sklearn.utils import class_weight
-tf.logging.set_verbosity(tf.logging.ERROR)
-logging.getLogger('tensorflow').setLevel(logging.ERROR)
-
 
 def get_instance(module, name, config, *args):
     return getattr(module, config[name]['type'])(*args, **config[name]['args'])
 
 
-def train(config):
-    tf.random.set_random_seed(config['seed'])
+def train(config_name):
+    config = json.load(open(config_name))
+    tf.random.set_seed(config['seed'])
 
     model = get_instance(module_arch, 'arch', config)
 
-    # try:
-    model.set_loss(get_instance(module_loss, 'loss', config))
-    # except:
-    #     model.set_loss(config['loss'])
+    try:
+        model.set_loss(get_instance(module_loss, 'loss', config))
+    except:
+        model.set_loss(config['loss'])
 
     for metric in config['metrics']:
         try:
@@ -38,16 +39,46 @@ def train(config):
     model.set_optimizer(get_instance(
         keras.optimizers, 'optimizer', config))
 
-    for callback in config['callbacks']:
-        try:
-            model.add_callback(get_instance(
-                keras.callbacks, callback['name'], callback))
-        except:
-            model.add_callback(get_instance(
-                module_callback, callback['name'], callback))
+    uniq = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+    logdir = f"logs/fit/{config['name']}/{uniq}"
+    batch_size = config['trainer']['batch_size']
 
-    #model.set_class_weight([1. / config["class_weight"], 1])
-    keras.backend.get_session().run(tf.global_variables_initializer())
+    os.makedirs(logdir)
+    copy2(config_name, os.path.join(logdir, 'config.json'))
+
+    for callback in config['callbacks']:
+        callback_logdir = None
+        callback_name = callback['type']
+        if 'format' in callback['args']:
+            frmt = callback['args']['format']
+            del callback['args']['format']
+            callback_logdir = os.path.join(logdir, frmt)
+
+        # predefined callback from keras.callbacks
+        if callback_name in dir(keras.callbacks):
+            if callback_logdir:
+                model.add_callback(
+                    getattr(keras.callbacks, callback_name)(callback_logdir, **callback['args']))
+            else:
+                model.add_callback(
+                    getattr(keras.callbacks, callback_name)(**callback['args']))
+        # custom callback from model.callbacks pacakgage
+        else:
+            if 'callback' in callback['args']:
+                internal_callback = getattr(utils, callback['args']['callback'])
+                del callback['args']['callback']
+            else:
+                internal_callback = None
+
+            model.add_callback(
+                getattr(module_callback, callback_name)(model=model,
+                                                        logdir=callback_logdir,
+                                                        callback= internal_callback,
+                                                        batch_size=batch_size,
+                                                        **callback['args']
+                                                       ))
+
+    model.set_class_weight([1. / config["class_weight"], 1])
 
     model.compile()
 
@@ -57,7 +88,7 @@ def train(config):
                           dataloader.valid,
                           dataloader.test,
                           **config["trainer"])
-
+    return history
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Tensorflow model template')
@@ -65,5 +96,4 @@ if __name__ == "__main__":
                         type=str, help="config file path")
 
     args = parser.parse_args()
-    config = json.load(open(args.config))
-    train(config)
+    train(args.config)
