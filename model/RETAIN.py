@@ -175,3 +175,75 @@ class RETAIN_LSTM(RETAIN):
             return y
 
         return _forward
+
+class RETAIN_GRU(RETAIN):
+    def __init__(self,
+                n_feat=13,
+                Wemb_size=30,
+                n_gru_a=1,
+                n_gru_b=1,
+                gru_sizes="[60, 60]",
+                fc_sizes="[80]",
+                dropout=None,
+                l1=1e-5
+    ):
+        gru_sizes = ast.literal_eval(gru_sizes)
+        fc_sizes = ast.literal_eval(fc_sizes)
+        assert len(gru_sizes) == 2
+
+        super(RETAIN_GRU, self).__init__(RNNa=RETAIN_GRU.RNN(
+                                                    n_layers=n_gru_a,
+                                                    gru_size=gru_sizes[0],
+                                                    fc_sizes=[],
+                                                    name='a',
+                                                    drop_out=None
+                                            ),
+                                        RNNb=RETAIN_GRU.RNN(
+                                                    n_layers=n_gru_b,
+                                                    gru_size=gru_sizes[1],
+                                                    fc_sizes=fc_sizes,
+                                                    name='b',
+                                                    drop_out=dropout
+                                            ),
+                                        n_feat=n_feat,
+                                        Wemb_size=Wemb_size,
+                                        l1=l1
+                                        )
+
+
+    def RNN(n_layers, gru_size, fc_sizes, name, drop_out=None):
+        rnns = [L.GRU(units=gru_size,
+                activation=tf.nn.tanh,
+                recurrent_activation=tf.nn.sigmoid,
+                recurrent_dropout=0,
+                unroll=False,
+                use_bias=True,
+                reset_after=True,
+                return_sequences=True,
+                name=f"{name}/GRU-{i}")
+            for i in range(n_layers)]
+
+        fcs = [L.Dense(units=size,
+                activation=tf.nn.tanh,
+                use_bias=True,
+                name=f"{name}/FC-{i}")
+        for i, size in enumerate(fc_sizes)]
+
+        if drop_out is not None:
+            drop = L.Dropout(
+                        rate=drop_out,
+                        name=f"{name}/dropout")
+        else:
+            drop = None
+
+        def _forward(x):
+            y = x
+            for rnn in rnns:
+                y = rnn(y)
+            for fc in fcs:
+                y = fc(y)
+            if drop is not None:
+                y =  drop(y)
+            return y
+
+        return _forward

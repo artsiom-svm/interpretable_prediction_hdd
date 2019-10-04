@@ -62,10 +62,7 @@ class ROCCurve(callbacks.Callback):
         self.batch_size = batch_size
         self.far_list = np.linspace(min_FN, max_FN, n_steps)
 
-    def on_train_begin(self, logs=None):
-        self.on_epoch_end(-1)
-
-    def on_epoch_end(self, epoch, logs=None):
+    def on_train_end(self, logs=None):
         x, y = self.model.valid_data.xy
         yh = self.model.predict(x, batch_size=self.batch_size)
 
@@ -80,9 +77,8 @@ class ROCCurve(callbacks.Callback):
                     title='ROC curve',
                     xlabel='FAR, %',
                     ylabel='Detection rate',
-                    step=epoch+1)
+                    step=1)
 
-    def on_train_end(self, logs=None):
         self.writer.close()
 
 class ContributionHeatmapTensorboard(callbacks.Callback):
