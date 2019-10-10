@@ -8,9 +8,22 @@ import numpy as np
 import ast
 
 class RETAIN(BaseModel):
-    def __init__(self, RNNa, RNNb, n_feat=13, Wemb_size=30, l1=1e-5):
+    def __init__(self,
+                RNNa,
+                RNNb,
+                n_feat=13,
+                Wemb_size=30,
+                mask_value=None,
+                l1=1e-5
+            ):
         super(RETAIN, self).__init__()
         self.l1 = l1
+        if mask_value is not None:
+            self.mask_value = mask_value
+            self.mask = L.Masking(mask_value=np.float32(mask_value),
+                                name="masking")
+        else:
+            self.mask = None
         self.Wemb = L.Dense(units=Wemb_size,
                     activation=None,
                     use_bias=False,
@@ -41,8 +54,9 @@ class RETAIN(BaseModel):
         self.model = keras.Model(inputs=x, outputs=y)
 
     def forward(self, x):
+        x_inv = self.x_inv(x)
         v = self.v(x)
-        v_inv = self.v_inv(v)
+        v_inv = self.v_inv(x_inv)
         g = self.g(v_inv)
         h = self.h(v_inv)
         e = self.e(g)
@@ -71,11 +85,31 @@ class RETAIN(BaseModel):
     def get_contribution(self, x):
         return self.get_contribution_coefficients(x) * x
 
+    def v_inv(self, x_inv):
+        x_inv = K.reverse(x_inv, axes=1)
+        if self.mask is not None:
+            x_inv = self.mask(x_inv)
+        return self.Wemb(x_inv)
+
     def v(self, x):
+        x = K.reverse(x, axes=1)
+        if self.mask is not None:
+            x = self.mask(x)
         return self.Wemb(x)
 
-    def v_inv(self, v):
-        return K.reverse(v, axes=1)
+    def x_inv(self, x):
+        if self.mask is not None:
+            msk = tf.reduce_all(tf.not_equal(x, self.mask_value), axis=-1)
+        else:
+            msk = tf.reduce_all(tf.equal(x, x), axis=-1)
+
+        msk = tf.cast(msk, dtype=tf.int32)
+        offs = tf.reduce_sum(msk, axis=-1)
+        return tf.reverse_sequence(x,
+                        seq_lengths=offs,
+                        seq_axis=1,
+                        batch_axis=0
+                    )
 
     def g(self, v_inv):
         return self.RNNa(v_inv)
@@ -84,7 +118,6 @@ class RETAIN(BaseModel):
         return self.RNNb(v_inv)
 
     def a(self, e):
-        e = tf.reduce_sum(e, axis=-1, name='a/e')
         return L.Softmax(activity_regularizer=keras.regularizers.l1(self.l1),
                         name='a/softmax')(e)
 
@@ -95,7 +128,6 @@ class RETAIN(BaseModel):
         return self.Wa(g)
 
     def c(self, a, b, v):
-        a = K.expand_dims(a, axis=-1)
         return tf.reduce_sum(a * (b * v), axis=-2, name='c/c')
 
     def y(self, c):
@@ -103,15 +135,17 @@ class RETAIN(BaseModel):
         return tf.identity(y, 'y')
 
     def get_a(self, x):
+        x_inv = self.x_inv(x)
         v = self.v(x)
-        v_inv = self.v_inv(v)
+        v_inv = self.v_inv(x_inv)
         g = self.g(v_inv)
         e = self.e(g)
         return self.a(e)
 
     def get_b(self, x):
+        x_inv = self.x_inv(x)
         v = self.v(x)
-        v_inv = self.v_inv(v)
+        v_inv = self.v_inv(x_inv)
         h = self.h(v_inv)
         return self.b(h)
 
@@ -125,6 +159,7 @@ class RETAIN_LSTM(RETAIN):
                 n_lstm_b=1,
                 lstm_sizes="[60, 60]",
                 fc_sizes="[80]",
+                mask_value=None,
                 l1=1e-5
     ):
         lstm_sizes = ast.literal_eval(lstm_sizes)
@@ -145,6 +180,7 @@ class RETAIN_LSTM(RETAIN):
                                             ),
                                         n_feat=n_feat,
                                         Wemb_size=Wemb_size,
+                                        mask_value=mask_value,
                                         l1=l1
                                         )
 
@@ -185,6 +221,7 @@ class RETAIN_GRU(RETAIN):
                 gru_sizes="[60, 60]",
                 fc_sizes="[80]",
                 dropout=None,
+                mask_value=None,
                 l1=1e-5
     ):
         gru_sizes = ast.literal_eval(gru_sizes)
@@ -207,6 +244,7 @@ class RETAIN_GRU(RETAIN):
                                             ),
                                         n_feat=n_feat,
                                         Wemb_size=Wemb_size,
+                                        mask_value=mask_value,
                                         l1=l1
                                         )
 
@@ -236,10 +274,10 @@ class RETAIN_GRU(RETAIN):
         else:
             drop = None
 
-        def _forward(x):
+        def _forward(x, mask=None):
             y = x
             for rnn in rnns:
-                y = rnn(y)
+                y = rnn(y, mask=mask)
             for fc in fcs:
                 y = fc(y)
             if drop is not None:
