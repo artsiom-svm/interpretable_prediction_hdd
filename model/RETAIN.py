@@ -43,7 +43,7 @@ class RETAIN(BaseModel):
         self.Wc = L.Dense(units=1,
                     activation=tf.nn.sigmoid,
                     use_bias=True,
-                    name='c/Wc')
+                    name='y/Wc')
 
         self.RNNa = RNNa
         self.RNNb = RNNb
@@ -54,45 +54,49 @@ class RETAIN(BaseModel):
         self.model = keras.Model(inputs=x, outputs=y)
 
     def forward(self, x):
-        x_inv = self.x_inv(x)
+        x_inv, msk = self.x_inv(x)
         v = self.v(x)
         v_inv = self.v_inv(x_inv)
         g = self.g(v_inv)
         h = self.h(v_inv)
         e = self.e(g)
-        a = self.a(e)
+        a = self.a(e, msk)
         b = self.b(h)
         c = self.c(a, b, v)
         y = self.y(c)
 
         return y
 
-    def get_contribution_coefficients(self, x):
-        b = self.get_b(x).numpy()
-        a = self.get_a(x).numpy()
+    def get_contribution_coefficients(self, X):
+        b = self.get_b(X).numpy()
+        a = self.get_a(X).numpy()
 
         W = self.Wc.get_weights()[0]
         Wemb = self.Wemb.get_weights()[0]
 
-        w = np.zeros(x.shape)
+        W = []
 
-        for i in range(x.shape[0]):
-            for j in range(x.shape[1]):
-                for k in range(x.shape[2]):
-                    w[i, j, k] = a[i, j] * (b[i, j] * Wemb[k]) @ W
-        return w
+        for i,x in enumerate(X):
+            x = x[np.any(x != self.mask_value, axis=-1)]
+            w = np.zeros_like(x)
+            for j in range(x.shape[0]):
+                for k in range(x.shape[1]):
+                    w[j, k] = a[i, j] * (b[i, j] * Wemb[k]) @ W
+            W.append(w)
+        return W
 
     def get_contribution(self, x):
-        return self.get_contribution_coefficients(x) * x
+        return [
+                w * x[np.any(x != self.mask_value, axis=-1)]
+                for w in self.get_contribution_coefficients(x)
+            ]
 
     def v_inv(self, x_inv):
-        x_inv = K.reverse(x_inv, axes=1)
         if self.mask is not None:
             x_inv = self.mask(x_inv)
         return self.Wemb(x_inv)
 
     def v(self, x):
-        x = K.reverse(x, axes=1)
         if self.mask is not None:
             x = self.mask(x)
         return self.Wemb(x)
@@ -105,11 +109,13 @@ class RETAIN(BaseModel):
 
         msk = tf.cast(msk, dtype=tf.int32)
         offs = tf.reduce_sum(msk, axis=-1)
-        return tf.reverse_sequence(x,
+        x_inv = tf.reverse_sequence(x,
                         seq_lengths=offs,
                         seq_axis=1,
                         batch_axis=0
                     )
+
+        return x_inv, msk
 
     def g(self, v_inv):
         return self.RNNa(v_inv)
@@ -117,9 +123,12 @@ class RETAIN(BaseModel):
     def h(self, v_inv):
         return self.RNNb(v_inv)
 
-    def a(self, e):
-        return L.Softmax(activity_regularizer=keras.regularizers.l1(self.l1),
-                        name='a/softmax')(e)
+    def a(self, e, msk):
+        msk = tf.expand_dims(tf.cast(msk, dtype=tf.float32), axis=-1)
+        e = tf.exp(e)
+        e = e * msk
+        e = e / tf.expand_dims(tf.reduce_sum(e, axis=-2), axis=-1)
+        return e
 
     def b(self, h):
         return self.Wb(h)
@@ -128,22 +137,22 @@ class RETAIN(BaseModel):
         return self.Wa(g)
 
     def c(self, a, b, v):
-        return tf.reduce_sum(a * (b * v), axis=-2, name='c/c')
+        return tf.reduce_sum( a * (b * v), axis=-2, name='y/c')
 
     def y(self, c):
         y = self.Wc(c)
-        return tf.identity(y, 'y')
+        return tf.identity(y, 'y/y')
 
     def get_a(self, x):
-        x_inv = self.x_inv(x)
+        x_inv, msk = self.x_inv(x)
         v = self.v(x)
         v_inv = self.v_inv(x_inv)
         g = self.g(v_inv)
         e = self.e(g)
-        return self.a(e)
+        return self.a(e, msk)
 
     def get_b(self, x):
-        x_inv = self.x_inv(x)
+        x_inv, _ = self.x_inv(x)
         v = self.v(x)
         v_inv = self.v_inv(x_inv)
         h = self.h(v_inv)
@@ -274,10 +283,10 @@ class RETAIN_GRU(RETAIN):
         else:
             drop = None
 
-        def _forward(x, mask=None):
+        def _forward(x):
             y = x
             for rnn in rnns:
-                y = rnn(y, mask=mask)
+                y = rnn(y)
             for fc in fcs:
                 y = fc(y)
             if drop is not None:
