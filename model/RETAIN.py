@@ -74,7 +74,7 @@ class RETAIN(BaseModel):
         W = self.Wc.get_weights()[0]
         Wemb = self.Wemb.get_weights()[0]
 
-        W = []
+        Ws = []
 
         for i,x in enumerate(X):
             x = x[np.any(x != self.mask_value, axis=-1)]
@@ -82,13 +82,13 @@ class RETAIN(BaseModel):
             for j in range(x.shape[0]):
                 for k in range(x.shape[1]):
                     w[j, k] = a[i, j] * (b[i, j] * Wemb[k]) @ W
-            W.append(w)
-        return W
+            Ws.append(w)
+        return Ws
 
-    def get_contribution(self, x):
+    def get_contribution(self, X):
         return [
                 w * x[np.any(x != self.mask_value, axis=-1)]
-                for w in self.get_contribution_coefficients(x)
+                for w,x in zip(self.get_contribution_coefficients(X), X)
             ]
 
     def v_inv(self, x_inv):

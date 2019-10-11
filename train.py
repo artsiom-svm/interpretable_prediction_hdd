@@ -45,6 +45,7 @@ def train(config_name):
 
     os.makedirs(logdir)
     copy2(config_name, os.path.join(logdir, 'config.json'))
+    checkpoint_dir = os.path.join(logdir, 'checkpoints')
 
     for callback in config['callbacks']:
         callback_logdir = None
@@ -52,7 +53,10 @@ def train(config_name):
         if 'format' in callback['args']:
             frmt = callback['args']['format']
             del callback['args']['format']
-            callback_logdir = os.path.join(logdir, frmt)
+            if callback_name == 'ModelCheckpoint':
+                callback_logdir = os.path.join(checkpoint_dir, frmt)
+            else:
+                callback_logdir = os.path.join(logdir, frmt)
 
         # predefined callback from keras.callbacks
         if callback_name in dir(keras.callbacks):
@@ -75,6 +79,7 @@ def train(config_name):
                                                         logdir=callback_logdir,
                                                         callback= internal_callback,
                                                         batch_size=batch_size,
+                                                        checkpoint_dir=checkpoint_dir,
                                                         **callback['args']
                                                        ))
 
