@@ -11,7 +11,7 @@ class GRU(BaseModel):
     def __init__(self,
             n_feat=13,
             n_cells=1,
-            gru_size="[5]",
+            gru_size=5,
             fc_sizes="80",
             Wemb_size=30,
             dropout=0.5,
@@ -20,7 +20,6 @@ class GRU(BaseModel):
     ):
         super(GRU, self).__init__()
 
-        gru_sizes = ast.literal_eval(gru_sizes)
         fc_sizes = ast.literal_eval(fc_sizes)
         self.dropout = dropout
 
