@@ -22,7 +22,8 @@ def train(config_name):
     config = json.load(open(config_name))
     tf.random.set_seed(config['seed'])
 
-    model = get_instance(module_arch, 'arch', config)
+    with tf.device('/cpu:0'):
+        model = get_instance(module_arch, 'arch', config)
 
     try:
         model.set_loss(get_instance(module_loss, 'loss', config))
@@ -85,8 +86,13 @@ def train(config_name):
 
     model.set_class_weight([1. / config["class_weight"], 1])
 
-    model.compile()
+    if config['n_gpu'] > 0:
+        try:
+            model = keras.utils.multi_gpu_model(model, gpus=config['n_gpu'])
+        except:
+            pass
 
+    model.compile()
     dataloader = get_instance(module_data, 'dataloader', config)
 
     history = model.train(dataloader.train,

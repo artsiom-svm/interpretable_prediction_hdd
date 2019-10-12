@@ -6,8 +6,7 @@
         "args": {
             "n_feat": 7,
             "Wemb_size": 30,
-            "n_cells": 1,
-            "gru_size": 50,
+            "gru_size": 80,
             "fc_sizes": "[30]",
             "dropout": 0.3,
             "mask_value": -100.0
@@ -17,13 +16,14 @@
         "type": "H5DatasetNamed",
         "args": {
             "hdf5_source": "data/backblaze_full_normalized.h5",
+            "dir": "one_year",
             "valid_ratio": 0.1,
             "test_ratio": 0.1,
             "seed": 2
         }
     },
     "loss": "binary_crossentropy",
-    "class_weight": 1,
+    "class_weight": 2,
     "metrics": [
         "binary_accuracy"
     ],
@@ -91,7 +91,8 @@
     ],
     "trainer": {
         "epochs": 200,
-        "verbose": 1,
+        "verbose": 0,
         "batch_size": 128
-    }
+    },
+    "n_gpu": 1
 }

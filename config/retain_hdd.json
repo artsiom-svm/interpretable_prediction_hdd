@@ -1,24 +1,26 @@
 {
-    "name": "RETAIN HDD LSTM LAST 20 FRAMES",
+    "name": "RETAIN_HDD",
     "seed": 3,
     "arch": {
-        "type": "RETAIN_LSTM",
+        "type": "RETAIN_GRU",
         "args": {
-            "n_feat": 13,
-            "Wemb_size": 20,
-            "n_lstm_a": 1,
-            "n_lstm_b": 2,
-            "lstm_sizes": "[50, 80]",
-            "fc_sizes": "[30]",
+            "n_feat": 7,
+            "Wemb_size": 30,
+            "n_gru_a": 1,
+            "n_gru_b": 2,
+            "gru_sizes": "[50, 60]",
+            "fc_sizes": "[40]",
+            "dropout": 0.3,
             "l1": 1e-05
         }
     },
     "dataloader": {
         "type": "H5DatasetNamed",
         "args": {
-            "hdf5_source": "data/HDD_selected.h5",
+            "hdf5_source": "data/backblaze_full_normalized.h5",
+            "dir": "one_year",
             "valid_ratio": 0.1,
-            "test_ratio": 0.01,
+            "test_ratio": 0.1,
             "seed": 2
         }
     },
@@ -46,6 +48,37 @@
             }
         },
         {
+            "name": "Model saver",
+            "type": "ModelCheckpoint",
+            "args": {
+                "format": "cp-{epoch:03d}.ckpt",
+                "save_weights_only": true,
+                "verbose": 0
+            }
+        },
+        {
+            "name": "Best model",
+            "type": "ModelCheckpoint",
+            "args": {
+                "format": "best.ckpt",
+                "monitor": "val_roc",
+                "mode": "max",
+                "save_best_only": true,
+                "save_weights_only": true,
+                "verbose": 0
+            }
+        },
+        {
+            "name": "Train-val accuracy/loss record",
+            "type": "TensorBoard",
+            "args": {
+                "format": "",
+                "histogram_freq": 0,
+                "write_images": false,
+                "profile_batch": 0
+            }
+        },
+        {
             "name": "ROC curve",
             "type": "ROCCurve",
             "args": {
@@ -61,54 +94,18 @@
             "name": "Contribution heatmap",
             "type": "ContributionHeatmapTensorboard",
             "args": {
-                "format": "",
+                "format": "heatmaps",
                 "labels": [
-                    "Reported Uncorrectable Errors'",
-                    "SATA Downshift Errors'",
-                    "Reallocated Sectors'",
-                    "Current Pending Sectors'",
-                    "Load Cycles'",
-                    "Head Flying Hours'",
-                    "Power On Hours'",
-                    " Count'",
-                    "Start/Stops'",
-                    "Power Off Retracts'",
-                    "Power Cycles'",
-                    "Total LBA Written'",
-                    "Total LBA Read"
+                    "Current Pending Sector Count",
+                    "Total Logical Blocks Written",
+                    "Total Logical Blocks Read",
+                    "Load Cycle Coun",
+                    "Power On Hours",
+                    "Temperature",
+                    "Seek Count"
                 ],
                 "callback": "save_images",
-                "total_size": "20"
-            }
-        },
-        {
-            "name": "Model saver",
-            "type": "ModelCheckpoint",
-            "args": {
-                "format": "checkpoints/cp-{epoch:03d}.ckpt",
-                "save_weights_only": true,
-                "verbose": 0
-            }
-        },
-        {
-            "name": "Best model",
-            "type": "ModelCheckpoint",
-            "args": {
-                "format": "checkpoints/best-{epoch:03d}.ckpt",
-                "monitor": "binary_accuracy",
-                "save_best_only": true,
-                "save_weights_only": true,
-                "verbose": 0
-            }
-        },
-        {
-            "name": "Train-val accuracy/loss record",
-            "type": "TensorBoard",
-            "args": {
-                "format": "",
-                "histogram_freq": 1,
-                "write_images": true,
-                "profile_batch": 0
+                "total_size": "25"
             }
         }
     ],
@@ -117,11 +114,5 @@
         "verbose": 0,
         "batch_size": 128
     },
-    "continue": {
-        "value": false,
-        "args": {
-            "epoch": 0,
-            "weights": "checkpoints/cp-0.ckpt"
-        }
-    }
+    "n_gpu": 1
 }
