@@ -1,6 +1,6 @@
 import tensorflow as tf
 import matplotlib.pyplot as plt
-import seaborn as sns
+# import seaborn as sns
 import io
 from pylab import annotate
 from mpl_toolkits.axes_grid1 import make_axes_locatable

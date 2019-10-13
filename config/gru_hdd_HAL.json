@@ -1,0 +1,97 @@
+{
+    "name": "GRU_HDD",
+    "seed": 3,
+    "arch": {
+        "type": "GRU",
+        "args": {
+            "n_feat": 7,
+            "Wemb_size": 30,
+            "gru_size": 80,
+            "fc_sizes": "[30]",
+            "dropout": 0.3,
+            "mask_value": -100.0
+        }
+    },
+    "dataloader": {
+        "type": "NpDatasetNamed",
+        "args": {
+            "source_dir": "data/backblaze_full",
+            "valid_ratio": 0.1,
+            "test_ratio": 0.1,
+            "seed": 2
+        }
+    },
+    "loss": "binary_crossentropy",
+    "class_weight": 2,
+    "metrics": [
+        "binary_accuracy"
+    ],
+    "optimizer": {
+        "type": "Adam",
+        "args": {
+            "lr": 1e-03,
+            "decay": 1e-7,
+            "amsgrad": true
+        }
+    },
+    "callbacks": [
+        {
+            "name": "ROC",
+            "type": "ROCMetric",
+            "args": {
+                "format": "",
+                "target_far": 0.01,
+                "max_iter": 10
+            }
+        },
+        {
+            "name": "Model saver",
+            "type": "ModelCheckpoint",
+            "args": {
+                "format": "cp-{epoch:03d}.ckpt",
+                "save_weights_only": true,
+                "verbose": 0
+            }
+        },
+        {
+            "name": "Best model",
+            "type": "ModelCheckpoint",
+            "args": {
+                "format": "best.ckpt",
+                "monitor": "val_roc",
+                "mode": "max",
+                "save_best_only": true,
+                "save_weights_only": true,
+                "verbose": 0
+            }
+        },
+        {
+            "name": "Train-val accuracy/loss record",
+            "type": "TensorBoard",
+            "args": {
+                "format": "",
+                "histogram_freq": 0,
+                "write_images": false,
+                "profile_batch": 0
+            }
+        },
+        {
+            "name": "ROC curve",
+            "type": "ROCCurve",
+            "args": {
+                "format": "",
+                "max_iter": 10,
+                "min_FN": 0.001,
+                "max_FN": 0.05,
+                "n_steps": 40,
+                "callback": "save_plot"
+            }
+        }
+    ],
+    "trainer": {
+        "epochs": 200,
+        "verbose": 2,
+        "batch_size": 128
+    },
+    "n_gpu": 1
+}

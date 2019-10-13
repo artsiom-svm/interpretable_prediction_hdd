@@ -12,7 +12,7 @@ import tensorflow as tf
 import os
 import utils
 from shutil import copy2
-from sklearn.utils import class_weight
+# from sklearn.utils import class_weight
 
 def get_instance(module, name, config, *args):
     return getattr(module, config[name]['type'])(*args, **config[name]['args'])
