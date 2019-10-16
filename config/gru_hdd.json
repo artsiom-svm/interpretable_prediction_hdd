@@ -6,6 +6,7 @@
         "args": {
             "n_feat": 7,
             "Wemb_size": 30,
+            "n_cells": 2,
             "gru_size": 80,
             "fc_sizes": "[30]",
             "dropout": 0.3,
@@ -92,7 +93,7 @@
     "trainer": {
         "epochs": 200,
         "verbose": 0,
-        "batch_size": 128
+        "batch_size": 256
     },
-    "n_gpu": 1
+    "n_gpu": 4
 }
