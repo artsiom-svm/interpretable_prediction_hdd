@@ -76,8 +76,9 @@ class RETAIN(BaseModel):
 
         Ws = []
 
-        for i,x in enumerate(X):
-            x = x[np.any(x != self.mask_value, axis=-1)]
+        for i, x in enumerate(X):
+            if self.mask is not None:
+                x = x[np.any(x != self.mask_value, axis=-1)]
             w = np.zeros_like(x)
             for j in range(x.shape[0]):
                 for k in range(x.shape[1]):
@@ -86,10 +87,16 @@ class RETAIN(BaseModel):
         return Ws
 
     def get_contribution(self, X):
-        return [
+        if self.mask is not None:
+            return [
                 w * x[np.any(x != self.mask_value, axis=-1)]
                 for w,x in zip(self.get_contribution_coefficients(X), X)
             ]
+        else:
+            return [
+                    w * x
+                    for w,x in zip(self.get_contribution_coefficients(X), X)
+                ]
 
     def v_inv(self, x_inv):
         if self.mask is not None:
