@@ -80,7 +80,7 @@ class GRU(BaseModel):
                 unroll=False,
                 use_bias=True,
                 reset_after=True,
-                return_sequences=False,
+                return_sequences=(i != n_layers - 1),
                 name=f"gru-{i}")
             for i in range(n_layers)
         ]
