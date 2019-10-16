@@ -8,6 +8,7 @@
             "Wemb_size": 30,
             "gru_size": 80,
             "fc_sizes": "[30]",
+            "n_cells": 2,
             "dropout": 0.3,
             "mask_value": -100.0
         }
@@ -91,7 +92,7 @@
     "trainer": {
         "epochs": 200,
         "verbose": 2,
-        "batch_size": 128
+        "batch_size": 256
     },
-    "n_gpu": 1
+    "n_gpu": 4
 }
