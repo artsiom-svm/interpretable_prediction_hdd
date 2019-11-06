@@ -40,7 +40,7 @@ def image(c, x, labels):
     return figure
 
 def plot(x, y, xlabel, ylabel):
-    sns.set()
+    # sns.set()
     figure = plt.figure(figsize=(10, 10))
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
