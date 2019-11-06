@@ -90,7 +90,10 @@ class ROCCurve(callbacks.Callback):
         y = np.array(detection_rate)
         x = self.far_list * 100
 
-        os.makedirs(self.logdir)
+        try:
+            os.makedirs(self.logdir)
+        except:
+            pass
         pickle.dump(
             {
                 'far_list': x,
@@ -126,6 +129,7 @@ class ContributionHeatmapTensorboard(callbacks.Callback):
         self.top_model = model
         self.total_size = np.int(total_size)
         self.logdir = logdir
+        self.epoch = 0
 
     def on_epoch_begin(self, epoch, logs=None):
         self.epoch = epoch
@@ -142,7 +146,10 @@ class ContributionHeatmapTensorboard(callbacks.Callback):
         coeff = self.top_model.get_contribution_coefficients(x)
         contrib = self.top_model.get_contribution(x)
 
-        os.makedirs(self.logdir)
+        try:
+            os.makedirs(self.logdir)
+        except:
+            pass
         pickle.dump(
             {
                 'coefficients': coeff,

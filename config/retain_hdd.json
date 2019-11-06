@@ -10,6 +10,7 @@
             "n_gru_b": 2,
             "gru_sizes": "[50, 60]",
             "fc_sizes": "[40]",
+            "mask_value": -100.0,
             "dropout": 0.3,
             "l1": 1e-05
         }
@@ -25,7 +26,7 @@
         }
     },
     "loss": "binary_crossentropy",
-    "class_weight": 1,
+    "class_weight": 2,
     "metrics": [
         "binary_accuracy"
     ],
@@ -105,14 +106,17 @@
                     "Seek Count"
                 ],
                 "callback": "save_images",
-                "total_size": "25"
+                "total_size": "-1"
             }
         }
     ],
     "trainer": {
         "epochs": 200,
-        "verbose": 0,
+        "verbose": 1,
         "batch_size": 128
     },
-    "n_gpu": 1
+    "restore": {
+        "continue": false,
+        "overwrite": false
+    }
 }
