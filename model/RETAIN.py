@@ -7,14 +7,16 @@ import tensorflow.keras.backend as K
 import numpy as np
 import ast
 
-class RETAIN(BaseModel):
+
+class RETAIN(BaseModel):    
     def __init__(self,
                 RNNa,
                 RNNb,
                 n_feat=13,
                 Wemb_size=30,
                 mask_value=None,
-                l1=1e-5
+                l1=1e-5,
+                l1_b=0
             ):
         super(RETAIN, self).__init__()
         self.l1 = l1
@@ -37,6 +39,7 @@ class RETAIN(BaseModel):
 
         self.Wb = L.Dense(units=Wemb_size,
                     activation=tf.nn.tanh,
+                    activity_regularizer=keras.regularizers.l1(l1_b),
                     use_bias=True,
                     name='b/Wb')
 
@@ -47,6 +50,15 @@ class RETAIN(BaseModel):
 
         self.RNNa = RNNa
         self.RNNb = RNNb
+        
+        class Identity(L.Layer):
+            def __init__(self, **kwargs):
+                super(Identity, self).__init__(**kwargs)
+
+            def call(self, inp):
+                return inp
+        
+        self.L1_a = Identity(activity_regularizer=keras.regularizers.l1(l1))
 
         x = keras.Input(shape=(None, n_feat))
         y = self.forward(x)
@@ -135,7 +147,7 @@ class RETAIN(BaseModel):
         e = tf.exp(e)
         e = e * msk
         e = e / tf.expand_dims(tf.reduce_sum(e, axis=-2), axis=-1)
-        return e
+        return self.L1_a(e)
 
     def b(self, h):
         return self.Wb(h)
