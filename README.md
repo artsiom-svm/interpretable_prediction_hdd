@@ -18,7 +18,11 @@ The rest of parameters should be clear from their name.
 
 Batch of 6 training has been used but it can be generalized to any size. Create a config for each traning and submit simular script to below in HAL:
 
-```TODO: %insert script from hal%```
+```ls -1 train_script_* | cut -d"_" -f3,4 | cut -d"." -f1 | xargs -I{} bash training_template.swb {}```
+
+where it interprets each ``train_script_%d_%d.sh`` as a training script than then provided in default job parameters at ``training_template.swb``.
+
+It automatically redirect hal's log stderr and stdout to ``logs/hal/retain/%d_%d.{out, err}``
 
 ## Result analysis
 
@@ -26,11 +30,13 @@ Batch of 6 training has been used but it can be generalized to any size. Create 
 
 At the end of training, if number of heatmaps was set to "-1", it will compute heatmap for a whole test set and store raw numpy arrays inside ``heatmaps`` folder i log dir of a current training.
 
-``dtw_compute.py`` includes functionality to compte dtw for a given raw data in pickle. Result is stored in the same directory as raw data with name ``dtw_raw.pkl``. Second argument you can provide is number of threads to use for computation.
+``compute_dtw.py`` includes functionality to compte dtw for a given raw data in pickle. Result is stored in the same directory as raw data with name ``dtw_raw.pkl``. Second argument you can provide is number of threads to use for computation.
 
 HAL system was used to compute dtw for a batch of models. To submit a batch of jobs:
 
-```TODO: %insert script from hal%```
+```cat paths.txt | xargs -I{} bash job_dtw_template.swb {}```
+
+where ``paths.txt`` has a line separted path to each raw heatmaps
 
 ### Clustering
 
