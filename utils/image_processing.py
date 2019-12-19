@@ -1,6 +1,6 @@
 import tensorflow as tf
 import matplotlib.pyplot as plt
-import seaborn as sns
+# import seaborn as sns
 import io
 from pylab import annotate
 from mpl_toolkits.axes_grid1 import make_axes_locatable
@@ -40,7 +40,7 @@ def image(c, x, labels):
     return figure
 
 def plot(x, y, xlabel, ylabel):
-    sns.set()
+    # sns.set()
     figure = plt.figure(figsize=(10, 10))
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)

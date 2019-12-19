@@ -1,23 +1,24 @@
 {
-    "name": "GRU_HDD",
-    "seed": 3,
+    "name": "RETAIN_HDDcw2_5e4",
+    "seed": 2,
     "arch": {
-        "type": "GRU",
+        "type": "RETAIN_GRU",
         "args": {
             "n_feat": 7,
             "Wemb_size": 30,
-            "n_cells": 2,
-            "gru_size": 80,
-            "fc_sizes": "[30]",
+            "n_gru_a": 1,
+            "n_gru_b": 2,
+            "gru_sizes": "[50, 70]",
+            "fc_sizes": "[50]",
+            "mask_value": -100.0,
             "dropout": 0.3,
-            "mask_value": -100.0
+            "l1": 1e-5
         }
     },
     "dataloader": {
-        "type": "H5DatasetNamed",
+        "type": "NpDatasetNamed",
         "args": {
-            "hdf5_source": "data/backblaze_full_normalized.h5",
-            "dir": "one_year",
+            "source_dir": "data/backblaze_full",
             "valid_ratio": 0.1,
             "test_ratio": 0.1,
             "seed": 2
@@ -31,7 +32,7 @@
     "optimizer": {
         "type": "Adam",
         "args": {
-            "lr": 1e-03,
+            "lr": 5e-04,
             "decay": 1e-7,
             "amsgrad": true
         }
@@ -88,12 +89,33 @@
                 "n_steps": 40,
                 "callback": "save_plot"
             }
+        },
+        {
+            "name": "Contribution heatmap",
+            "type": "ContributionHeatmapTensorboard",
+            "args": {
+                "format": "heatmaps",
+                "labels": [
+                    "Current Pending Sector Count",
+                    "Total Logical Blocks Written",
+                    "Total Logical Blocks Read",
+                    "Load Cycle Coun",
+                    "Power On Hours",
+                    "Temperature",
+                    "Seek Count"
+                ],
+                "callback": "save_images",
+                "total_size": "-1"
+            }
         }
     ],
     "trainer": {
-        "epochs": 200,
-        "verbose": 0,
-        "batch_size": 256
+        "epochs": 300,
+        "verbose": 1,
+        "batch_size": 512
     },
-    "n_gpu": 4
+    "restore": {
+        "continue": false,
+        "overwrite": false
+    }
 }

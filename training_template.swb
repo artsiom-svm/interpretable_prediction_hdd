@@ -1,0 +1,14 @@
+
+echo "#!/bin/bash
+
+#SBATCH --output="logs/hal/retain/$1.out"
+#SBATCH --error="logs/hal/retain/$1.err"
+#SBATCH --ntasks-per-node=36
+#SBATCH --job-name="train$1"
+#SBATCH --partition=gpux1
+#SBATCH --time=72
+
+./train_script_$1.sh" > submit_training.swb
+
+swbatch submit_training.swb
+
