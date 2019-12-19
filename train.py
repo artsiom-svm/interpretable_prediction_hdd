@@ -22,89 +22,89 @@ def train(config_name):
     config = json.load(open(config_name))
     tf.random.set_seed(config['seed'])
 
-    strategy = tf.distribute.MirroredStrategy([x.name for x in device_lib.list_local_devices() if 'device:CPU' in x.name or 'device:GPU' in x.name])
+#     strategy = tf.distribute.MirroredStrategy([x.name for x in device_lib.list_local_devices() if 'device:CPU' in x.name or 'device:GPU' in x.name])
     
-    with strategy.scope():
-        model = get_instance(module_arch, 'arch', config)
+#     with strategy.scope():
+    model = get_instance(module_arch, 'arch', config)
 
+    try:
+        model.set_loss(get_instance(module_loss, 'loss', config))
+    except:
+        model.set_loss(config['loss'])
+
+    for metric in config['metrics']:
         try:
-            model.set_loss(get_instance(module_loss, 'loss', config))
+            model.add_metric(
+                getattr(module_metric, metric['type'])(model, **metric['args']))
         except:
-            model.set_loss(config['loss'])
+            model.add_metric(metric)
 
-        for metric in config['metrics']:
-            try:
-                model.add_metric(
-                    getattr(module_metric, metric['type'])(model, **metric['args']))
-            except:
-                model.add_metric(metric)
+    model.set_optimizer(get_instance(
+        keras.optimizers, 'optimizer', config))
 
-        model.set_optimizer(get_instance(
-            keras.optimizers, 'optimizer', config))
+    if config["restore"] is not None and config["restore"]["continue"]:
+        restore = config["restore"]
+        uniq = restore["dir"]
+        logdir = f"logs/fit/{config['name']}/{uniq}"
 
-        if config["restore"] is not None and config["restore"]["continue"]:
-            restore = config["restore"]
-            uniq = restore["dir"]
-            logdir = f"logs/fit/{config['name']}/{uniq}"
+        if restore["step"] == "last":
+            check_point_name = tf.train.latest_checkpoint(f"{logdir}/checkpoints/")
+        else:
+            epoch = np.int(restore["step"])
+            check_point_name = f"{logdir}/checkpoints/cp-{epoch}.ckpt"
+        model.model.load_weights(check_point_name)
 
-            if restore["step"] == "last":
-                check_point_name = tf.train.latest_checkpoint(f"{logdir}/checkpoints/")
+    if config["restore"] is None or not config["restore"]["overwrite"]:
+        uniq = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+        logdir = f"logs/fit/{config['name']}/{uniq}"
+        try:
+            os.makedirs(logdir)
+        except:
+            pass
+
+    copy2(config_name, os.path.join(logdir, 'config.json'))
+    batch_size = config['trainer']['batch_size']
+    checkpoint_dir = os.path.join(logdir, 'checkpoints')
+
+
+    for callback in config['callbacks']:
+        callback_logdir = None
+        callback_name = callback['type']
+        if 'format' in callback['args']:
+            frmt = callback['args']['format']
+            del callback['args']['format']
+            if callback_name == 'ModelCheckpoint':
+                callback_logdir = os.path.join(checkpoint_dir, frmt)
             else:
-                epoch = np.int(restore["step"])
-                check_point_name = f"{logdir}/checkpoints/cp-{epoch}.ckpt"
-            model.model.load_weights(check_point_name)
+                callback_logdir = os.path.join(logdir, frmt)
 
-        if config["restore"] is None or not config["restore"]["overwrite"]:
-            uniq = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-            logdir = f"logs/fit/{config['name']}/{uniq}"
-            try:
-                os.makedirs(logdir)
-            except:
-                pass
-
-        copy2(config_name, os.path.join(logdir, 'config.json'))
-        batch_size = config['trainer']['batch_size']
-        checkpoint_dir = os.path.join(logdir, 'checkpoints')
-
-
-        for callback in config['callbacks']:
-            callback_logdir = None
-            callback_name = callback['type']
-            if 'format' in callback['args']:
-                frmt = callback['args']['format']
-                del callback['args']['format']
-                if callback_name == 'ModelCheckpoint':
-                    callback_logdir = os.path.join(checkpoint_dir, frmt)
-                else:
-                    callback_logdir = os.path.join(logdir, frmt)
-
-            # predefined callback from keras.callbacks
-            if callback_name in dir(keras.callbacks):
-                if callback_logdir:
-                    model.add_callback(
-                        getattr(keras.callbacks, callback_name)(callback_logdir, **callback['args']))
-                else:
-                    model.add_callback(
-                        getattr(keras.callbacks, callback_name)(**callback['args']))
-            # custom callback from model.callbacks pacakgage
-            else:
-                if 'callback' in callback['args']:
-                    internal_callback = getattr(utils, callback['args']['callback'])
-                    del callback['args']['callback']
-                else:
-                    internal_callback = None
-
+        # predefined callback from keras.callbacks
+        if callback_name in dir(keras.callbacks):
+            if callback_logdir:
                 model.add_callback(
-                    getattr(module_callback, callback_name)(model=model,
-                                                            logdir=callback_logdir,
-                                                            callback= internal_callback,
-                                                            batch_size=batch_size,
-                                                            checkpoint_dir=checkpoint_dir,
-                                                            **callback['args']
-                                                           ))
+                    getattr(keras.callbacks, callback_name)(callback_logdir, **callback['args']))
+            else:
+                model.add_callback(
+                    getattr(keras.callbacks, callback_name)(**callback['args']))
+        # custom callback from model.callbacks pacakgage
+        else:
+            if 'callback' in callback['args']:
+                internal_callback = getattr(utils, callback['args']['callback'])
+                del callback['args']['callback']
+            else:
+                internal_callback = None
 
-#         model.set_class_weight([1. / config["class_weight"], 1])
-        model.compile()
+            model.add_callback(
+                getattr(module_callback, callback_name)(model=model,
+                                                        logdir=callback_logdir,
+                                                        callback= internal_callback,
+                                                        batch_size=batch_size,
+                                                        checkpoint_dir=checkpoint_dir,
+                                                        **callback['args']
+                                                       ))
+
+    model.set_class_weight([1. / config["class_weight"], 1])
+    model.compile()
     
     dataloader = get_instance(module_data, 'dataloader', config)
 
