@@ -44,4 +44,8 @@ DBSAN was used. Search for it inside ``analysis.ipynb`` for a raw usage.
 
 ### Training stability
 
-Similar to dtw computation, use script ``batch_similarity.py`` that takes location for all logs where inside it searches for ``heatmaps\dtw_raw.plk``. At the same level as log dir, it create files ``cosine_similary.plk`` that stores raw cosine similary between all entries.
+Similar to dtw computation, use script ``batch_similarity.py`` that takes location for all logs where inside it searches for ``heatmaps/raw.plk``. At the same level as log dir, it create files ``cosine_similary.pkl`` that stores raw cosine similary between all entries.
+
+Usage:
+
+```bash job_similarity_template.swb "logs/fit/arch_name"```
