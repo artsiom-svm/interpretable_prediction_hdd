@@ -1,0 +1,12 @@
+#!/bin/bash
+
+echo "#SBATCH --output="logs/hal/retain/similarity.out"
+#SBATCH --error="logs/hal/retain/similarity.err"
+#SBATCH --job-name="similarity"
+#SBATCH --partition=cpun1
+#SBATCH --time=48
+
+./similarity_compute_script.sh $1 80
+"> submit_similarity.swb
+
+swbatch submit_similarity.swb
