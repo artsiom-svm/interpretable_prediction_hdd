@@ -4,7 +4,7 @@ args=($1)
 echo "#SBATCH --output="logs/hal/retain/${args[1]}_dtw.out"
 #SBATCH --error="logs/hal/retain/${args[1]}.err"
 #SBATCH --job-name="dtw${args[1]}"
-#SBATCH --partition=cpu
+#SBATCH --partition=cpun1
 #SBATCH --time=48
 
 ./dtw_compute_script.sh ${args[0]} 80
