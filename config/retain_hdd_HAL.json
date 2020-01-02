@@ -1,6 +1,6 @@
 {
-    "name": "RETAIN_HDD_lmt",
-    "seed": 4,
+    "name": "RETAIN_HDD",
+    "seed": 3,
     "arch": {
         "type": "RETAIN_GRU",
         "args": {
@@ -8,11 +8,11 @@
             "Wemb_size": 30,
             "n_gru_a": 1,
             "n_gru_b": 2,
-            "gru_sizes": "[30, 80]",
-            "fc_sizes": "[30]",
+            "gru_sizes": "[50, 70]",
+            "fc_sizes": "[50]",
             "mask_value": -100.0,
             "dropout": 0.3,
-            "l1": 1e-5
+            "l1": 1e-05
         }
     },
     "dataloader": {
@@ -25,14 +25,14 @@
         }
     },
     "loss": "binary_crossentropy",
-    "class_weight": 2.5,
+    "class_weight": 2,
     "metrics": [
         "binary_accuracy"
     ],
     "optimizer": {
         "type": "Adam",
         "args": {
-            "lr": 5e-04,
+            "lr": 1e-03,
             "decay": 1e-7,
             "amsgrad": true
         }
@@ -110,7 +110,7 @@
         }
     ],
     "trainer": {
-        "epochs": 300,
+        "epochs": 2,
         "verbose": 1,
         "batch_size": 512
     },

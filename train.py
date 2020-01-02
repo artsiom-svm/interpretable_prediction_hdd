@@ -55,7 +55,7 @@ def train(config_name):
         model.model.load_weights(check_point_name)
 
     if config["restore"] is None or not config["restore"]["overwrite"]:
-        uniq = f"{str(np.random.randint(0,9999)).zfill(4)}_{datetime.datetime.now().strftime("%Y%m%d-%H%M%S")}"
+        uniq = str(np.random.randint(0,9999)).zfill(4) + "_" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
         logdir = f"logs/fit/{config['name']}/{uniq}"
         try:
             os.makedirs(logdir)

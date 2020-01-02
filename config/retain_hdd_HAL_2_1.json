@@ -1,5 +1,5 @@
 {
-    "name": "RETAIN_HDDcw2_5e4",
+    "name": "RETAIN_HDD_lmt",
     "seed": 2,
     "arch": {
         "type": "RETAIN_GRU",
@@ -8,8 +8,8 @@
             "Wemb_size": 30,
             "n_gru_a": 1,
             "n_gru_b": 2,
-            "gru_sizes": "[50, 70]",
-            "fc_sizes": "[50]",
+            "gru_sizes": "[30, 80]",
+            "fc_sizes": "[30]",
             "mask_value": -100.0,
             "dropout": 0.3,
             "l1": 1e-5
@@ -25,7 +25,7 @@
         }
     },
     "loss": "binary_crossentropy",
-    "class_weight": 2,
+    "class_weight": 2.5,
     "metrics": [
         "binary_accuracy"
     ],

@@ -13,8 +13,18 @@ m = 0
 raw = []
 
 def get_metric(mat_A,  mat_B):
-    distances = scipy.spatial.distance.cdist(mat_A / np.abs(mat_A).max(), mat_B / np.abs(mat_B).max(), metric='cosine')
-    return np.diag(distances).mean()
+    cut_a = np.abs(np.mean(mat_A)) + 3 * np.std(mat_A)
+    cut_b = np.abs(np.mean(mat_B)) + 3 * np.std(mat_B)
+
+    mat_A = np.sign(mat_A) * np.minimum(np.abs(mat_A), cut_a) / np.minimum(np.max(np.abs(mat_A)), cut_a)
+
+    mat_A = mat_A.flatten()
+
+    mat_B = np.sign(mat_B) * np.minimum(np.abs(mat_B), cut_b) / np.minimum(np.max(np.abs(mat_B)), cut_b)
+
+    mat_B = mat_B.flatten()
+
+    return scipy.spatial.distance.cosine(mat_A, mat_B)
 
 
 def load_data(logdir):
