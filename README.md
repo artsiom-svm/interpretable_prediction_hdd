@@ -1,4 +1,12 @@
-## How to run:
+# An Interpretable Predictive Model for Early Detection of Hardware Failure
+
+Link to the PDF will be added when available. Please ping me if I forget.
+
+## Data
+
+  Fully pre-processed dataset is available in `data` directory. We reported `npy` instead of `hdf` due to compatibility on AC922 system. You can view some of the steps that have been done on normalized dataset at `data_masking` notebook.
+
+## How to run
 
 ``python3.6 train.py -c config/config.json``
 
