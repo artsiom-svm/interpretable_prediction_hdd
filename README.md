@@ -2,11 +2,15 @@
 
 Link to the PDF will be added when available. Please ping me if I forget.
 
+Enable tensorboard callback (see in `..."type": "TensorBoard"...` in configs for examples) to able view life all metrics.
+
 ## Data
 
   Fully pre-processed dataset is available in `data` directory. We reported `npy` instead of `hdf` due to compatibility on AC922 system. You can view some of the steps that have been done on normalized dataset at `data_masking` notebook.
 
 ## How to run
+
+If you are using any of job scrips defined in `job_scripts` directory, move then into root directory
 
 ``python3.6 train.py -c config/config.json``
 
@@ -45,10 +49,6 @@ HAL system was used to compute dtw for a batch of models. To submit a batch of j
 ```cat paths.txt | xargs -I{} bash job_dtw_template.swb {}```
 
 where ``paths.txt`` has a line separted path to each raw heatmaps
-
-### Clustering
-
-DBSAN was used. Search for it inside ``analysis.ipynb`` for a raw usage.
 
 ### Training stability
 

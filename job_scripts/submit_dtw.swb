@@ -1,0 +1,8 @@
+#SBATCH --output=logs/hal/retain/_dtw.out
+#SBATCH --error=logs/hal/retain/.err
+#SBATCH --job-name=dtw
+#SBATCH --partition=cpu
+#SBATCH --time=48
+
+./dtw_compute_script.sh  80
+

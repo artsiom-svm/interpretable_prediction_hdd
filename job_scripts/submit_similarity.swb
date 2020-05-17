@@ -1,0 +1,8 @@
+#SBATCH --output=logs/hal/retain/similarity.out
+#SBATCH --error=logs/hal/retain/similarity.err
+#SBATCH --job-name=similarity
+#SBATCH --partition=cpun1
+#SBATCH --time=48
+
+./similarity_compute_script.sh logs/fit/RETAIN_HDDcw2 80
+

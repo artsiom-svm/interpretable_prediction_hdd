@@ -1,0 +1,10 @@
+#!/bin/bash
+
+#SBATCH --output=logs/hal/retain/6_1.out
+#SBATCH --error=logs/hal/retain/6_1.err
+#SBATCH --ntasks-per-node=36
+#SBATCH --job-name=train6_1
+#SBATCH --partition=gpux1
+#SBATCH --time=72
+
+./train_script_6_1.sh
