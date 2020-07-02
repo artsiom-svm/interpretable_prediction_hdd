@@ -1,6 +1,6 @@
 # An Interpretable Predictive Model for Early Detection of Hardware Failure
 
-Link to the PDF will be added when available. Please ping me if I forget.
+pdf version [here](https://github.com/artsiom-svm/interpretable_prediction_hdd/blob/master/An_Interpretable_Predictive_Model_for_EarlyDetection_of_Hardware_Failure.pdf).
 
 Enable tensorboard callback (see in `..."type": "TensorBoard"...` in configs for examples) to able view life all metrics.
 
